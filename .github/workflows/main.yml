@@ -15,6 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
       
       - name: Running Build Script
         run: chmod +x build.sh && ./build.sh
@@ -24,8 +27,10 @@ jobs:
         with:
           tag_name: nightly
           name: "Latest Build"
-          body: "Shadowsocks-rust & Shadow-TLS (v3 optimized, panic=abort, stripped)"
+          body: "Shadowsocks-rust, Shadow-TLS, and Exporters (v3 optimized, stripped)"
           files: |
             ssserver
             shadow-tls
+            node_exporter
+            blackbox_exporter
           overwrite: true
