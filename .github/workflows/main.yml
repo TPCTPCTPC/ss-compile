@@ -3,20 +3,29 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '0 4 * * 1'
+
 permissions:
   contents: write
+
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     env:
       RUSTFLAGS: "-C target-cpu=x86-64-v3"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
-      - run: chmod +x build.sh && ./build.sh
-      - uses: softprops/action-gh-release@v1
+      
+      - name: Running Build Script
+        run: chmod +x build.sh && ./build.sh
+        
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v1
         with:
           tag_name: nightly
-          name: Nightly Build
-          files: ssserver
+          name: "Latest Build"
+          body: "Shadowsocks-rust & Shadow-TLS (v3 optimized, panic=abort, stripped)"
+          files: |
+            ssserver
+            shadow-tls
           overwrite: true
