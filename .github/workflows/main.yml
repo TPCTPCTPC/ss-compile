@@ -33,4 +33,5 @@ jobs:
             shadow-tls
             node_exporter
             blackbox_exporter
+            mosdns
           overwrite: true
