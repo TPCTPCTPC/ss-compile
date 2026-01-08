@@ -57,4 +57,12 @@ git checkout "$MOS_TAG"
 go build -ldflags="-s -w -X main.version=$MOS_TAG" -trimpath -o ../mosdns
 cd ..
 
+# 6. Build Sing-Box
+git clone https://github.com/SagerNet/sing-box.git sing-box-src
+cd sing-box-src
+SING_TAG=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+git checkout "$SING_TAG"
+go build -ldflags="-s -w" -o ../sing-box ./cmd/sing-box
+cd ..
+
 echo "All builds finished."
