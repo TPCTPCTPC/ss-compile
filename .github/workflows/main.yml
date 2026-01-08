@@ -27,11 +27,12 @@ jobs:
         with:
           tag_name: nightly
           name: "Latest Build"
-          body: "Shadowsocks-rust, Shadow-TLS, and Exporters (v3 optimized, stripped)"
+          body: "Shadowsocks-rust, Shadow-TLS, Exporters, and Sing-Box (v3 optimized, stripped)"
           files: |
             ssserver
             shadow-tls
             node_exporter
             blackbox_exporter
             mosdns
+            sing-box
           overwrite: true
