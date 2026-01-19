@@ -14,23 +14,37 @@ jobs:
       RUSTFLAGS: "-C target-cpu=x86-64-v3"
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: actions/setup-go@v5
+      
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        
+      - name: Setup Go
+        uses: actions/setup-go@v5
         with:
           go-version: 'stable'
       
       - name: Running Build Script
-        run: chmod +x build.sh && ./build.sh
+        run: |
+          chmod +x build.sh
+          ./build.sh
         
       - name: Upload to Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: nightly
           name: "Latest Build"
-          body: "Shadowsocks-rust, Shadow-TLS, Exporters, and Sing-Box (v3 optimized, stripped)"
+          body: |
+            Built binaries (v3 optimized, stripped):
+            - Shadowsocks-rust
+            - Shadow-TLS
+            - Realm (New)
+            - Mosdns
+            - Sing-Box
+            - Node Exporter & Blackbox Exporter
           files: |
             ssserver
             shadow-tls
+            realm
             node_exporter
             blackbox_exporter
             mosdns
