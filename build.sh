@@ -65,4 +65,14 @@ git checkout "$SING_TAG"
 go build -ldflags="-s -w" -o ../sing-box ./cmd/sing-box
 cd ..
 
+# 7. Build Realm
+git clone https://github.com/zhboner/realm.git realm-src
+cd realm-src
+REALM_TAG=$(curl -s https://api.github.com/repos/zhboner/realm/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+git checkout "$REALM_TAG"
+cargo build --release
+strip -s target/release/realm
+mv target/release/realm ../realm
+cd ..
+
 echo "All builds finished."
