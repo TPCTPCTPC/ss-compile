@@ -62,7 +62,7 @@ git clone https://github.com/SagerNet/sing-box.git sing-box-src
 cd sing-box-src
 SING_TAG=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 git checkout "$SING_TAG"
-go build -ldflags="-s -w" -o ../sing-box ./cmd/sing-box
+go build -tags "with_wireguard with_gvisor" -ldflags="-s -w" -o ../sing-box ./cmd/sing-box
 cd ..
 
 # 7. Build Realm
