@@ -91,4 +91,13 @@ strip -s target/release/realm
 mv target/release/realm ../realm
 cd ..
 
+# 8. Build AnyTLS
+git clone https://github.com/anytls/anytls-go.git anytls-src
+cd anytls-src
+ANYTLS_TAG=$(fetch_latest_tag anytls/anytls-go)
+git checkout "$ANYTLS_TAG"
+go build -trimpath -buildvcs=false -ldflags="-s -w" -o ../anytls-server ./cmd/server
+go build -trimpath -buildvcs=false -ldflags="-s -w" -o ../anytls-client ./cmd/client
+cd ..
+
 echo "All builds finished."
