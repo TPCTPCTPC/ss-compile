@@ -38,6 +38,7 @@ jobs:
             - Shadowsocks-rust
             - Shadow-TLS
             - Realm (New)
+            - AnyTLS server & client
             - Mosdns
             - Sing-Box
             - Node Exporter & Blackbox Exporter
@@ -45,6 +46,8 @@ jobs:
             ssserver
             shadow-tls
             realm
+            anytls-server
+            anytls-client
             node_exporter
             blackbox_exporter
             mosdns
