@@ -89,7 +89,11 @@ git clone https://github.com/SagerNet/sing-box.git sing-box-src
 cd sing-box-src
 SING_TAG=$(fetch_latest_tag SagerNet/sing-box)
 git checkout "$SING_TAG"
-go build -tags "with_quic" -ldflags="-s -w" -o ../sing-box ./cmd/sing-box
+SING_VERSION=${SING_TAG#v}
+SING_LDFLAGS=$(cat release/LDFLAGS)
+go build -trimpath -buildvcs=false -tags "with_quic" \
+    -ldflags="-X 'github.com/sagernet/sing-box/constant.Version=$SING_VERSION' $SING_LDFLAGS -s -w -buildid=" \
+    -o ../sing-box ./cmd/sing-box
 
 # Build the newest alpha without optional build tags. Keep the target at
 # GOAMD64=v3 while stripping local paths and injecting the upstream version.
