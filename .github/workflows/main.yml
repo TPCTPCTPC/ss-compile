@@ -27,6 +27,19 @@ jobs:
         run: |
           chmod +x build.sh
           ./build.sh
+
+      - name: Verify Sing-Box Builds
+        run: |
+          set -euo pipefail
+          stable_version=$(./sing-box version)
+          alpha_version=$(./sing-box-alpha version)
+          echo "$stable_version"
+          echo "$alpha_version"
+          if grep -Eq -- '-(alpha|beta|rc)' <<< "$stable_version"; then
+            echo "Stable sing-box unexpectedly reports a prerelease version" >&2
+            exit 1
+          fi
+          grep -Eq -- '-alpha\.' <<< "$alpha_version"
         
       - name: Upload to Release
         uses: softprops/action-gh-release@v1
@@ -41,6 +54,7 @@ jobs:
             - AnyTLS server & client
             - Mosdns
             - Sing-Box
+            - Sing-Box Alpha (no optional build tags)
             - Node Exporter & Blackbox Exporter
           files: |
             ssserver
@@ -52,4 +66,5 @@ jobs:
             blackbox_exporter
             mosdns
             sing-box
+            sing-box-alpha
           overwrite: true

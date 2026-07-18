@@ -17,6 +17,17 @@ fetch_latest_tag() {
     echo "$tag"
 }
 
+# Helper: select the newest alpha tag from the cloned repository.
+fetch_latest_alpha_tag() {
+    local tag
+    tag=$(git tag --list 'v*-alpha.*' --sort=-version:refname | head -1 || true)
+    if [ -z "$tag" ]; then
+        echo "❌ Could not determine latest alpha tag" >&2
+        exit 1
+    fi
+    echo "$tag"
+}
+
 # Rust Env
 export CARGO_PROFILE_RELEASE_LTO="fat"
 export CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1
@@ -79,6 +90,16 @@ cd sing-box-src
 SING_TAG=$(fetch_latest_tag SagerNet/sing-box)
 git checkout "$SING_TAG"
 go build -tags "with_quic" -ldflags="-s -w" -o ../sing-box ./cmd/sing-box
+
+# Build the newest alpha without optional build tags. Keep the target at
+# GOAMD64=v3 while stripping local paths and injecting the upstream version.
+SING_ALPHA_TAG=$(fetch_latest_alpha_tag)
+git checkout "$SING_ALPHA_TAG"
+SING_ALPHA_VERSION=${SING_ALPHA_TAG#v}
+SING_ALPHA_LDFLAGS=$(cat release/LDFLAGS)
+go build -trimpath -buildvcs=false \
+    -ldflags="-X 'github.com/sagernet/sing-box/constant.Version=$SING_ALPHA_VERSION' $SING_ALPHA_LDFLAGS -s -w -buildid=" \
+    -o ../sing-box-alpha ./cmd/sing-box
 cd ..
 
 # 7. Build Realm
