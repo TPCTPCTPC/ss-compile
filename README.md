@@ -13,7 +13,7 @@ The scheduled GitHub Action publishes a rolling `nightly` release with:
 - `blackbox_exporter`
 - `mosdns`
 - `sing-box`
-- `sing-box-alpha` (latest alpha, built without optional build tags)
+- `sing-box-beta` (latest beta, built without optional build tags)
 
 The workflow targets modern x86 servers with x86-64-v3 / `GOAMD64=v3`
 optimizations and stripped release binaries.

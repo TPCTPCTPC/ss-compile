@@ -32,15 +32,15 @@ jobs:
         run: |
           set -euo pipefail
           stable_version=$(./sing-box version)
-          alpha_version=$(./sing-box-alpha version)
+          beta_version=$(./sing-box-beta version)
           echo "$stable_version"
-          echo "$alpha_version"
+          echo "$beta_version"
           grep -Eq -- '^sing-box version [0-9]+\.[0-9]+\.[0-9]+' <<< "$stable_version"
           if grep -Eq -- '-(alpha|beta|rc)' <<< "$stable_version"; then
             echo "Stable sing-box unexpectedly reports a prerelease version" >&2
             exit 1
           fi
-          grep -Eq -- '-alpha\.' <<< "$alpha_version"
+          grep -Eq -- '-beta\.' <<< "$beta_version"
         
       - name: Upload to Release
         uses: softprops/action-gh-release@v1
@@ -55,7 +55,7 @@ jobs:
             - AnyTLS server & client
             - Mosdns
             - Sing-Box
-            - Sing-Box Alpha (no optional build tags)
+            - Sing-Box Beta (no optional build tags)
             - Node Exporter & Blackbox Exporter
           files: |
             ssserver
@@ -67,5 +67,5 @@ jobs:
             blackbox_exporter
             mosdns
             sing-box
-            sing-box-alpha
+            sing-box-beta
           overwrite: true

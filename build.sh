@@ -17,12 +17,12 @@ fetch_latest_tag() {
     echo "$tag"
 }
 
-# Helper: select the newest alpha tag from the cloned repository.
-fetch_latest_alpha_tag() {
+# Helper: select the newest beta tag from the cloned repository.
+fetch_latest_beta_tag() {
     local tag
-    tag=$(git tag --list 'v*-alpha.*' --sort=-version:refname | head -1 || true)
+    tag=$(git tag --list 'v*-beta.*' --sort=-version:refname | head -1 || true)
     if [ -z "$tag" ]; then
-        echo "❌ Could not determine latest alpha tag" >&2
+        echo "❌ Could not determine latest beta tag" >&2
         exit 1
     fi
     echo "$tag"
@@ -95,15 +95,15 @@ go build -trimpath -buildvcs=false -tags "with_quic" \
     -ldflags="-X 'github.com/sagernet/sing-box/constant.Version=$SING_VERSION' $SING_LDFLAGS -s -w -buildid=" \
     -o ../sing-box ./cmd/sing-box
 
-# Build the newest alpha without optional build tags. Keep the target at
+# Build the newest beta without optional build tags. Keep the target at
 # GOAMD64=v3 while stripping local paths and injecting the upstream version.
-SING_ALPHA_TAG=$(fetch_latest_alpha_tag)
-git checkout "$SING_ALPHA_TAG"
-SING_ALPHA_VERSION=${SING_ALPHA_TAG#v}
-SING_ALPHA_LDFLAGS=$(cat release/LDFLAGS)
+SING_BETA_TAG=$(fetch_latest_beta_tag)
+git checkout "$SING_BETA_TAG"
+SING_BETA_VERSION=${SING_BETA_TAG#v}
+SING_BETA_LDFLAGS=$(cat release/LDFLAGS)
 go build -trimpath -buildvcs=false \
-    -ldflags="-X 'github.com/sagernet/sing-box/constant.Version=$SING_ALPHA_VERSION' $SING_ALPHA_LDFLAGS -s -w -buildid=" \
-    -o ../sing-box-alpha ./cmd/sing-box
+    -ldflags="-X 'github.com/sagernet/sing-box/constant.Version=$SING_BETA_VERSION' $SING_BETA_LDFLAGS -s -w -buildid=" \
+    -o ../sing-box-beta ./cmd/sing-box
 cd ..
 
 # 7. Build Realm
