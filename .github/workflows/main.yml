@@ -55,7 +55,7 @@ jobs:
             - AnyTLS server & client
             - Mosdns
             - Sing-Box
-            - Sing-Box Beta (no optional build tags)
+            - Sing-Box Beta (V2Ray API)
             - Node Exporter & Blackbox Exporter
           files: |
             ssserver

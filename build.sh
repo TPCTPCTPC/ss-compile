@@ -95,13 +95,13 @@ go build -trimpath -buildvcs=false -tags "with_quic" \
     -ldflags="-X 'github.com/sagernet/sing-box/constant.Version=$SING_VERSION' $SING_LDFLAGS -s -w -buildid=" \
     -o ../sing-box ./cmd/sing-box
 
-# Build the newest beta without optional build tags. Keep the target at
+# Build the newest beta with only the V2Ray API feature. Keep the target at
 # GOAMD64=v3 while stripping local paths and injecting the upstream version.
 SING_BETA_TAG=$(fetch_latest_beta_tag)
 git checkout "$SING_BETA_TAG"
 SING_BETA_VERSION=${SING_BETA_TAG#v}
 SING_BETA_LDFLAGS=$(cat release/LDFLAGS)
-go build -trimpath -buildvcs=false \
+go build -trimpath -buildvcs=false -tags "with_v2ray_api" \
     -ldflags="-X 'github.com/sagernet/sing-box/constant.Version=$SING_BETA_VERSION' $SING_BETA_LDFLAGS -s -w -buildid=" \
     -o ../sing-box-beta ./cmd/sing-box
 cd ..
