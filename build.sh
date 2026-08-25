@@ -17,12 +17,12 @@ fetch_latest_tag() {
     echo "$tag"
 }
 
-# Helper: select the newest beta tag from the cloned repository.
-fetch_latest_beta_tag() {
+# Helper: select the newest release-candidate tag from the cloned repository.
+fetch_latest_rc_tag() {
     local tag
-    tag=$(git tag --list 'v*-beta.*' --sort=-version:refname | head -1 || true)
+    tag=$(git tag --list 'v*-rc.*' --sort=-version:refname | head -1 || true)
     if [ -z "$tag" ]; then
-        echo "❌ Could not determine latest beta tag" >&2
+        echo "❌ Could not determine latest release-candidate tag" >&2
         exit 1
     fi
     echo "$tag"
@@ -95,15 +95,15 @@ go build -trimpath -buildvcs=false -tags "with_quic" \
     -ldflags="-X 'github.com/sagernet/sing-box/constant.Version=$SING_VERSION' $SING_LDFLAGS -s -w -buildid=" \
     -o ../sing-box ./cmd/sing-box
 
-# Build the newest beta with only the V2Ray API feature. Keep the target at
+# Build the newest release candidate with only the V2Ray API feature. Keep the target at
 # GOAMD64=v3 while stripping local paths and injecting the upstream version.
-SING_BETA_TAG=$(fetch_latest_beta_tag)
-git checkout "$SING_BETA_TAG"
-SING_BETA_VERSION=${SING_BETA_TAG#v}
-SING_BETA_LDFLAGS=$(cat release/LDFLAGS)
+SING_RC_TAG=$(fetch_latest_rc_tag)
+git checkout "$SING_RC_TAG"
+SING_RC_VERSION=${SING_RC_TAG#v}
+SING_RC_LDFLAGS=$(cat release/LDFLAGS)
 go build -trimpath -buildvcs=false -tags "with_v2ray_api" \
-    -ldflags="-X 'github.com/sagernet/sing-box/constant.Version=$SING_BETA_VERSION' $SING_BETA_LDFLAGS -s -w -buildid=" \
-    -o ../sing-box-beta ./cmd/sing-box
+    -ldflags="-X 'github.com/sagernet/sing-box/constant.Version=$SING_RC_VERSION' $SING_RC_LDFLAGS -s -w -buildid=" \
+    -o ../sing-box-rc ./cmd/sing-box
 cd ..
 
 # 7. Build Realm
