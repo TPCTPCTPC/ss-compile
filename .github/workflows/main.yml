@@ -13,23 +13,38 @@ jobs:
     env:
       RUSTFLAGS: "-C target-cpu=x86-64-v3"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
         
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v7
         with:
-          go-version: 'stable'
+          go-version: '1.26.7'
+          cache: false
       
       - name: Running Build Script
         run: |
           chmod +x build.sh
           ./build.sh
+
+      - name: Verify Sing-Box Build
+        run: |
+          set -euo pipefail
+          version_output=$(./sing-box version)
+          build_info=$(go version -m ./sing-box)
+          echo "$version_output"
+          grep -Eq -- '^sing-box version [0-9]+\.[0-9]+\.[0-9]+$' <<< "$version_output"
+          if grep -Eq -- '-(alpha|beta|rc)' <<< "$version_output"; then
+            echo "Stable sing-box unexpectedly reports a prerelease version" >&2
+            exit 1
+          fi
+          grep -F -- 'with_quic' <<< "$build_info"
+          grep -F -- 'with_v2ray_api' <<< "$build_info"
         
       - name: Upload to Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: nightly
           name: "Latest Build"
@@ -37,10 +52,10 @@ jobs:
             Built binaries (v3 optimized, stripped):
             - Shadowsocks-rust
             - Shadow-TLS
-            - Realm (New)
+            - Realm (multi-threaded)
             - AnyTLS server & client
             - Mosdns
-            - Sing-Box
+            - Sing-Box (QUIC + V2Ray API)
             - Node Exporter & Blackbox Exporter
           files: |
             ssserver
@@ -52,4 +67,4 @@ jobs:
             blackbox_exporter
             mosdns
             sing-box
-          overwrite: true
+          overwrite_files: true

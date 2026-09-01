@@ -1,11 +1,14 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # Helper: fetch latest tag with API fallback to git tags
 fetch_latest_tag() {
     local repo="$1"
     local tag
-    tag=$(curl -s --connect-timeout 5 "https://api.github.com/repos/$repo/releases/latest" 2>/dev/null | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    tag=$(curl -fsSL --connect-timeout 5 --max-time 20 \
+        "https://api.github.com/repos/$repo/releases/latest" 2>/dev/null \
+        | sed -nE 's/.*"tag_name":[[:space:]]*"([^"]+)".*/\1/p' \
+        | head -1 || true)
     if [ -z "$tag" ]; then
         echo "⚠️  API rate-limited, falling back to git tags for $repo" >&2
         tag=$(git tag --sort=-version:refname | head -1 || true)
@@ -15,6 +18,25 @@ fetch_latest_tag() {
         exit 1
     fi
     echo "$tag"
+}
+
+# Build Prometheus exporters with reproducible upstream-style version metadata.
+build_prometheus_exporter() {
+    local tag="$1"
+    local output="$2"
+    local version="${tag#v}"
+    local revision
+    local build_date
+    revision=$(git rev-parse HEAD)
+    build_date=$(git show -s --format=%cd --date=format:%Y%m%d-%H:%M:%S HEAD)
+    go build -trimpath -buildvcs=false \
+        -ldflags="-s -w -buildid= \
+            -X github.com/prometheus/common/version.Version=$version \
+            -X github.com/prometheus/common/version.Revision=$revision \
+            -X github.com/prometheus/common/version.Branch=$tag \
+            -X github.com/prometheus/common/version.BuildUser=ss-compile \
+            -X github.com/prometheus/common/version.BuildDate=$build_date" \
+        -o "../$output"
 }
 
 # Rust Env
@@ -28,6 +50,7 @@ export CARGO_PROFILE_RELEASE_INCREMENTAL="false"
 # Go Env
 export GOAMD64=v3
 export CGO_ENABLED=0
+export GOTOOLCHAIN=local
 
 # 1. Build Shadowsocks-rust
 git clone https://github.com/shadowsocks/shadowsocks-rust.git ss-src
@@ -54,7 +77,7 @@ git clone https://github.com/prometheus/node_exporter.git node-src
 cd node-src
 NODE_TAG=$(fetch_latest_tag prometheus/node_exporter)
 git checkout "$NODE_TAG"
-go build -ldflags="-s -w" -o ../node_exporter
+build_prometheus_exporter "$NODE_TAG" node_exporter
 cd ..
 
 # 4. Build Blackbox Exporter
@@ -62,7 +85,7 @@ git clone https://github.com/prometheus/blackbox_exporter.git black-src
 cd black-src
 BLACK_TAG=$(fetch_latest_tag prometheus/blackbox_exporter)
 git checkout "$BLACK_TAG"
-go build -ldflags="-s -w" -o ../blackbox_exporter
+build_prometheus_exporter "$BLACK_TAG" blackbox_exporter
 cd ..
 
 # 5. Build Mosdns
@@ -70,7 +93,8 @@ git clone https://github.com/IrineSistiana/mosdns.git mosdns-src
 cd mosdns-src
 MOS_TAG=$(fetch_latest_tag IrineSistiana/mosdns)
 git checkout "$MOS_TAG"
-go build -ldflags="-s -w -X main.version=$MOS_TAG" -trimpath -o ../mosdns
+go build -trimpath -buildvcs=false \
+    -ldflags="-s -w -buildid= -X main.version=$MOS_TAG" -o ../mosdns
 cd ..
 
 # 6. Build Sing-Box
@@ -78,7 +102,11 @@ git clone https://github.com/SagerNet/sing-box.git sing-box-src
 cd sing-box-src
 SING_TAG=$(fetch_latest_tag SagerNet/sing-box)
 git checkout "$SING_TAG"
-go build -tags "with_quic" -ldflags="-s -w" -o ../sing-box ./cmd/sing-box
+SING_VERSION=${SING_TAG#v}
+SING_LDFLAGS=$(cat release/LDFLAGS)
+go build -trimpath -buildvcs=false -tags "with_quic,with_v2ray_api" \
+    -ldflags="-X 'github.com/sagernet/sing-box/constant.Version=$SING_VERSION' $SING_LDFLAGS -s -w -buildid=" \
+    -o ../sing-box ./cmd/sing-box
 cd ..
 
 # 7. Build Realm
@@ -86,7 +114,8 @@ git clone https://github.com/zhboner/realm.git realm-src
 cd realm-src
 REALM_TAG=$(fetch_latest_tag zhboner/realm)
 git checkout "$REALM_TAG"
-cargo build --release --no-default-features --features "batched-udp,brutal-shutdown" --bin realm
+cargo build --release --no-default-features \
+    --features "multi-thread,batched-udp,brutal-shutdown" --bin realm
 strip -s target/release/realm
 mv target/release/realm ../realm
 cd ..
@@ -96,8 +125,8 @@ git clone https://github.com/anytls/anytls-go.git anytls-src
 cd anytls-src
 ANYTLS_TAG=$(fetch_latest_tag anytls/anytls-go)
 git checkout "$ANYTLS_TAG"
-go build -trimpath -buildvcs=false -ldflags="-s -w" -o ../anytls-server ./cmd/server
-go build -trimpath -buildvcs=false -ldflags="-s -w" -o ../anytls-client ./cmd/client
+go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o ../anytls-server ./cmd/server
+go build -trimpath -buildvcs=false -ldflags="-s -w -buildid=" -o ../anytls-client ./cmd/client
 cd ..
 
 echo "All builds finished."
